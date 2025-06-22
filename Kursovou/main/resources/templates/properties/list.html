@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Список объектов недвижимости</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Аренда недвижимости</a>
+            <div class="navbar-nav ms-auto">
+                <a th:if="${#authorization.expression('isAuthenticated()')}" 
+                   th:href="@{/auth/home}" 
+                   class="nav-link">
+                    <i class="fas fa-user"></i> Профиль
+                </a>
+                <a th:if="${#authorization.expression('isAuthenticated()')}" 
+                   th:href="@{/auth/logout}" 
+                   class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </a>
+                <a th:unless="${#authorization.expression('isAuthenticated()')}" 
+                   th:href="@{/auth/login}" 
+                   class="nav-link">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h2>Объекты недвижимости</h2>
+        
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        
+        <!-- Фильтры -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/properties}" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="minPrice" class="form-label">Цена от</label>
+                        <input type="number" class="form-control" id="minPrice" name="minPrice" th:value="${minPrice}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="maxPrice" class="form-label">Цена до</label>
+                        <input type="number" class="form-control" id="maxPrice" name="maxPrice" th:value="${maxPrice}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="type" class="form-label">Тип</label>
+                        <select class="form-select" id="type" name="type">
+                            <option value="">Все типы</option>
+                            <option th:each="type : ${propertyTypes}"
+                                    th:value="${type}"
+                                    th:text="${type}"
+                                    th:selected="${type == selectedType}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="rooms" class="form-label">Комнаты</label>
+                        <input type="number" class="form-control" id="rooms" name="rooms" th:value="${rooms}" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="minArea" class="form-label">Площадь от</label>
+                        <input type="number" class="form-control" id="minArea" name="minArea" th:value="${minArea}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="maxArea" class="form-label">Площадь до</label>
+                        <input type="number" class="form-control" id="maxArea" name="maxArea" th:value="${maxArea}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="address" class="form-label">Адрес</label>
+                        <input type="text" class="form-control" id="address" name="address" th:value="${address}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="keyword" class="form-label">Поиск</label>
+                        <input type="text" class="form-control" id="keyword" name="keyword" th:value="${keyword}" placeholder="По названию или описанию">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                        <a th:href="@{/properties}" class="btn btn-secondary">Сбросить</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Сортировка -->
+        <div class="mb-3">
+            <div class="btn-group" role="group">
+                <a th:href="@{/properties(page=${currentPage}, size=10, sort='price_asc')}" 
+                   class="btn btn-outline-secondary" 
+                   th:classappend="${sort == 'price_asc'} ? 'active'">
+                    <i class="fas fa-sort-amount-up"></i> Цена ↑
+                </a>
+                <a th:href="@{/properties(page=${currentPage}, size=10, sort='price_desc')}" 
+                   class="btn btn-outline-secondary"
+                   th:classappend="${sort == 'price_desc'} ? 'active'">
+                    <i class="fas fa-sort-amount-down"></i> Цена ↓
+                </a>
+                <a th:href="@{/properties(page=${currentPage}, size=10, sort='area_asc')}" 
+                   class="btn btn-outline-secondary"
+                   th:classappend="${sort == 'area_asc'} ? 'active'">
+                    <i class="fas fa-sort-amount-up"></i> Площадь ↑
+                </a>
+                <a th:href="@{/properties(page=${currentPage}, size=10, sort='area_desc')}" 
+                   class="btn btn-outline-secondary"
+                   th:classappend="${sort == 'area_desc'} ? 'active'">
+                    <i class="fas fa-sort-amount-down"></i> Площадь ↓
+                </a>
+            </div>
+        </div>
+        
+        <!-- Список объектов -->
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <div th:each="property : ${properties}" class="col">
+                <div class="card h-100">
+                    <img th:if="${property.imageFilename != null}"
+                         th:src="@{'/uploads/' + ${property.imageFilename}}"
+                         class="card-img-top"
+                         alt="Фото объекта"
+                         style="height: 200px; object-fit: cover;">
+                    <img th:unless="${property.imageFilename != null}"
+                         th:src="@{'/images/property-types/' + ${property.type.toString().toLowerCase() + '.png'}}"
+                         class="card-img-top"
+                         alt="Фото объекта"
+                         style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${property.title}"></h5>
+                        <p class="card-text" th:text="${property.description}"></p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i> <span th:text="${property.address}"></span><br>
+                                <i class="fas fa-home"></i> <span th:text="${property.type}"></span><br>
+                                <i class="fas fa-door-open"></i> <span th:text="${property.rooms + ' комн.'}"></span><br>
+                                <i class="fas fa-ruler-combined"></i> <span th:text="${property.area + ' м²'}"></span><br>
+                                <i class="fas fa-tag"></i> <span th:text="${property.price + ' ₽'}"></span>
+                            </small>
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a th:href="@{/properties/{id}(id=${property.id})}" class="btn btn-primary">Подробнее</a>
+                        <a th:href="@{/properties/edit/{id}(id=${property.id})}" class="btn btn-secondary">Редактировать</a>
+                        <a th:href="@{/properties/delete/{id}(id=${property.id})}" 
+                           class="btn btn-danger"
+                           onclick="return confirm('Вы уверены, что хотите удалить этот объект?')">Удалить</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Пагинация -->
+        <nav th:if="${totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/properties(page=${currentPage - 1}, size=10, sort=${sort})}">Предыдущая</a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                    th:classappend="${currentPage == i} ? 'active'">
+                    <a class="page-link" th:href="@{/properties(page=${i}, size=10, sort=${sort})}" th:text="${i + 1}"></a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/properties(page=${currentPage + 1}, size=10, sort=${sort})}">Следующая</a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="mt-3">
+            <a th:href="@{/properties/new}" class="btn btn-success">Добавить объект</a>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

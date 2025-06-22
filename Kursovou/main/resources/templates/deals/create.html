@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Новая сделка</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Аренда недвижимости</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/properties">Недвижимость</a>
+                <a class="nav-link active" href="/deals">Сделки</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Новая сделка</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title" th:text="${property.title}"></h5>
+                <p class="card-text" th:text="${property.description}"></p>
+                <p class="card-text">
+                    <strong>Адрес:</strong> <span th:text="${property.address}"></span><br>
+                    <strong>Цена:</strong> <span th:text="${property.price}"></span><br>
+                    <strong>Площадь:</strong> <span th:text="${property.area}"></span> м²<br>
+                    <strong>Комнаты:</strong> <span th:text="${property.rooms}"></span>
+                </p>
+            </div>
+        </div>
+
+        <form th:action="@{/deals/new}" method="post">
+            <input type="hidden" name="propertyId" th:value="${property.id}">
+            
+            <div class="mb-3">
+                <label for="buyerId" class="form-label">Покупатель</label>
+                <select class="form-select" id="buyerId" name="buyerId" required>
+                    <option value="">Выберите покупателя</option>
+                    <!-- Здесь должен быть список пользователей -->
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="realtorId" class="form-label">Риэлтор</label>
+                <select class="form-select" id="realtorId" name="realtorId" required>
+                    <option value="">Выберите риэлтора</option>
+                    <option th:each="realtor : ${realtors}"
+                            th:value="${realtor.id}"
+                            th:text="${realtor.user.fullName + ' (' + realtor.specialization + ')'}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="dealAmount" class="form-label">Сумма сделки</label>
+                <input type="number" class="form-control" id="dealAmount" name="dealAmount" required
+                       th:value="${property.price}">
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Описание сделки</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Создать сделку</button>
+            <a href="/deals" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

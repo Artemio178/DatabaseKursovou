@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль риэлтора</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Профиль риэлтора</h5>
+                        <div class="mb-3">
+                            <strong>Имя пользователя:</strong>
+                            <span th:if="${realtor != null and realtor.user != null}" th:text="${realtor.user.username}"></span>
+                            <span th:unless="${realtor != null and realtor.user != null}">Нет данных</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Email:</strong>
+                            <span th:if="${realtor != null and realtor.user != null and realtor.user.email != null}" th:text="${realtor.user.email}"></span>
+                            <span th:unless="${realtor != null and realtor.user != null and realtor.user.email != null}">Нет данных</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Телефон:</strong>
+                            <span th:if="${realtor != null and realtor.user != null and realtor.user.phone != null}" th:text="${realtor.user.phone}"></span>
+                            <span th:unless="${realtor != null and realtor.user != null and realtor.user.phone != null}">Нет данных</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Статус:</strong>
+                            <span th:if="${realtor != null and realtor.isActive != null and realtor.isActive}" class="badge bg-success">Активен</span>
+                            <span th:if="${realtor != null and realtor.isActive != null and !realtor.isActive}" class="badge bg-danger">Неактивен</span>
+                            <span th:unless="${realtor != null and realtor.isActive != null}">Нет данных</span>
+                        </div>
+                        <a th:href="@{/realtor/requests}" class="btn btn-primary">
+                            <i class="fas fa-list"></i> Все запросы
+                        </a>
+                        <a th:href="@{/properties}" class="btn btn-secondary mt-2">
+                            <i class="fas fa-home"></i> К объявлениям
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Последние запросы</h5>
+                        <div class="list-group">
+                            <div th:if="${requests != null and #lists.size(requests) > 0}">
+                                <a th:each="request : ${requests}" 
+                                   th:href="@{/realtor/requests}"
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1" th:text="${request.property != null ? request.property.title : 'Нет данных'}"></h6>
+                                        <small th:text="${request.createdAt != null ? #temporals.format(request.createdAt, 'dd.MM.yyyy HH:mm') : ''}"></small>
+                                    </div>
+                                    <p class="mb-1" th:text="${request.message != null ? request.message : 'Нет сообщения'}"></p>
+                                    <small>
+                                        <span class="badge" 
+                                              th:classappend="${request.status == T(com.example.demo.model.PropertyRequest.RequestStatus).PENDING ? 'bg-warning' : 
+                                                             request.status == T(com.example.demo.model.PropertyRequest.RequestStatus).ACCEPTED ? 'bg-success' : 
+                                                             request.status == T(com.example.demo.model.PropertyRequest.RequestStatus).REJECTED ? 'bg-danger' : 'bg-info'}"
+                                              th:text="${request.status != null ? request.status : 'Нет статуса'}"></span>
+                                        <span class="ms-2">
+                                            Клиент: <span th:text="${request.client != null ? request.client.username : 'Нет данных'}"></span>
+                                        </span>
+                                    </small>
+                                </a>
+                            </div>
+                            <div th:unless="${requests != null and #lists.size(requests) > 0}">
+                                <span>Нет запросов</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
